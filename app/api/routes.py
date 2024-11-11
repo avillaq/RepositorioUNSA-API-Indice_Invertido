@@ -1,5 +1,6 @@
 import socket
 import json
+from nltk.corpus import wordnet
 from flask import jsonify, request
 from app.api.models import Documento, Coleccion, Autor, Documento_Autor, PalabraClave, Documento_PalabraClave, Editor
 from app.api import bp
@@ -260,6 +261,20 @@ def get_editor(id):
     editor = Editor.query.get_or_404(id)
     return jsonify(editor.format())
 
+
+def generar_consulta_booleana(palabras):
+    """
+    Genera una consulta booleana a partir de palabras clave, incluyendo sinónimos.
+    """
+    palabras_expandidas = []
+    for palabra in palabras.split():
+        sinonimos = set([palabra])  # Incluye la palabra original
+        for sinonimo in wordnet.synsets(palabra):
+            for lemma in sinonimo.lemmas():
+                sinonimos.add(lemma.name())
+        palabras_expandidas.append(f"{' OR '.join(sinonimos)}")
+    return ' AND '.join(palabras_expandidas)
+
 def consultar_indice_invertido(palabras):
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -268,12 +283,14 @@ def consultar_indice_invertido(palabras):
         client_socket.sendall(palabras.encode('utf-8'))
 
         # Recibir la respuesta del servidor en fragmentos
-        response = ""
+        response = b""
         while True:
-            part = client_socket.recv(8192).decode("utf-8")
+            part = client_socket.recv(4096)
             response += part
-            if len(part) < 8192:
+            if len(part) < 4096:
                 break
+            
+        response = response.decode("utf-8")
         response_data = json.loads(response)
         
         client_socket.close()
@@ -286,13 +303,17 @@ def consultar_indice_invertido(palabras):
 @bp.route('/buscar', methods=['GET'])
 @limiter.limit("10/minute")
 @cache.cached(query_string=True)
-def buscar_documentos():
+def buscar_documentos_semantico():
     palabras = request.args.get('palabras', '').strip()
     if not palabras:
         return jsonify(error="Debe proporcionar palabras clave para buscar"), 400
 
-    # Consultar al indice invertido
-    respuesta = consultar_indice_invertido(palabras)
+    # Generar la consulta booleana enriquecida
+    consulta_booleana = generar_consulta_booleana(palabras)
+    print(f"Consulta booleana: {consulta_booleana}")
+
+    # Enviar la consulta al índice invertido
+    respuesta = consultar_indice_invertido(consulta_booleana)
 
     try:
         resultado = {
