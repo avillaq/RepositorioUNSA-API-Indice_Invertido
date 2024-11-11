@@ -1,7 +1,12 @@
+import socket
 from flask import jsonify, request
 from app.api.models import Documento, Coleccion, Autor, Documento_Autor, PalabraClave, Documento_PalabraClave, Editor
 from app.api import bp
 from app.extensions import db, limiter, cache
+
+# Configuracion del servidor C++ de índice invertido
+INDICE_INVERTIDO_HOST = "localhost"
+INDICE_INVERTIDO_PORT = 8081
 
 @bp.route('/documentos', methods=['GET'])
 @limiter.limit("10/minute")
