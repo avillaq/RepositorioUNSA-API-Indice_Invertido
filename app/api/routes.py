@@ -1,5 +1,6 @@
 import socket
 import json
+import spacy
 from nltk.corpus import wordnet
 from flask import jsonify, request
 from app.api.models import Documento, Coleccion, Autor, Documento_Autor, PalabraClave, Documento_PalabraClave, Editor
@@ -9,6 +10,9 @@ from app.extensions import db, limiter, cache
 # Configuracion del servidor C++ de índice invertido
 INDICE_INVERTIDO_HOST = "localhost"
 INDICE_INVERTIDO_PORT = 8081
+
+# Carga el modelo de spaCy
+nlp = spacy.load("es_core_news_sm")  # Modelo para español
 
 @bp.route('/documentos', methods=['GET'])
 @limiter.limit("10/minute")
@@ -324,6 +328,61 @@ def buscar_documentos_semantico():
 
     except ValueError:
         return jsonify(error="Error procesando la respuesta del índice invertido"), 500
+
+def interpretar_pregunta(pregunta):
+    """
+    Analiza una pregunta en lenguaje natural y genera una consulta booleana.
+    """
+    doc = nlp(pregunta)
+    palabras_clave = []
+    filtros = {}
+
+    for token in doc:
+        if token.pos_ in ["NOUN", "PROPN", "ADJ", "VERB"]:  # Sustantivos, nombres propios y adjetivos
+            if token.shape_ == "dddd":
+                filtros["fecha"] = token.text
+            else:
+                palabras_clave.append(token.text)
+
+        print(token.text, token.pos_, token.lemma_, token.shape_)
+
+    print(f"Palabras clave: {palabras_clave}")
+    print(f"Filtros: {filtros}")
+
+    # Generar consulta booleana para palabras clave
+    #consulta_booleana = generar_consulta_booleana(' '.join(palabras_clave))
+    consulta_booleana = ' AND '.join(palabras_clave)
+    if "fecha" in filtros:
+        consulta_booleana += f" AND {filtros['fecha']}"
+
+    return consulta_booleana
+
+@bp.route('/consulta', methods=['GET'])
+@limiter.limit("10/minute")
+@cache.cached(query_string=True)
+def consulta_lenguaje_natural():
+    pregunta = request.args.get('pregunta', '').strip()
+    print(f"Pregunta: {pregunta}")
+    if not pregunta:
+        return jsonify(error="Debe proporcionar una pregunta"), 400
+
+    # Interpretar la pregunta y generar la consulta booleana
+    consulta_booleana = interpretar_pregunta(pregunta)
+    print(f"Consulta booleana: {consulta_booleana}")
+
+    # Enviar la consulta al índice invertido
+    respuesta = consultar_indice_invertido(consulta_booleana)
+
+    try:
+        resultado = {
+            'total_items': respuesta["total"],
+            'items': respuesta["resultados"]
+        }
+        return jsonify(resultado)
+
+    except ValueError:
+        return jsonify(error="Error procesando la respuesta del índice invertido"), 500
+
 
 @bp.errorhandler(429)
 def ratelimit_error(e):
