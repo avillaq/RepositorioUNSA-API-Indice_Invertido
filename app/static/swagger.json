@@ -1,0 +1,767 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Repositorio UNSA API",
+    "description": "Documentacion de la API para el repositorio de la UNSA",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Alexander Villafuerte Quispe",
+      "url": "https://github.com/avillaq",
+      "email": "villafuertequispealex@gmail.com"
+    }
+  },
+  "host": "localhost:5000",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/documentos": {
+      "get": {
+        "tags": [
+          "Documentos"
+        ],
+        "summary": "Obtiene una lista de documentos",
+        "description": "Este endpoint devuelve una lista de documentos con filtros opcionales por título, fecha, autor, colección, editor y palabra clave. Además, permite paginación y ordenamiento.",
+        "parameters": [
+          {
+            "name": "titulo",
+            "in": "query",
+            "description": "Filtra documentos por el título",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "description": "Filtra documentos por la fecha de publicación",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "id_autor",
+            "in": "query",
+            "description": "Filtra documentos por el ID del autor",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "id_coleccion",
+            "in": "query",
+            "description": "Filtra documentos por el ID de la colección",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "id_editor",
+            "in": "query",
+            "description": "Filtra documentos por el ID del editor",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "id_palabra_clave",
+            "in": "query",
+            "description": "Filtra documentos por el ID de la palabra clave",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Campo por el que se ordenarán los resultados (titulo o fecha)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "titulo",
+              "fecha"
+            ]
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de los resultados (ascendente o descendente)",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página para la paginación",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de resultados por página",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de documentos obtenida con éxito",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "total_pages": {
+                  "type": "integer"
+                },
+                "total_items": {
+                  "type": "integer"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Documento"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/documentos/{id}": {
+      "get": {
+        "tags": [
+          "Documentos"
+        ],
+        "summary": "Obtiene un documento específico",
+        "description": "Este endpoint devuelve la información detallada de un documento dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del documento a obtener",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Documento encontrado exitosamente",
+            "schema": {
+              "$ref": "#/definitions/Documento"
+            }
+          },
+          "404": {
+            "description": "Documento no encontrado"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/documentos/{id}/palabras_clave": {
+      "get": {
+        "tags": [
+          "Documentos"
+        ],
+        "summary": "Obtiene las palabras clave de un documento específico",
+        "description": "Este endpoint devuelve una lista de palabras clave asociadas a un documento dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del documento del cual obtener las palabras clave",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de las palabras clave, puede ser 'asc' o 'desc'. Por defecto es 'asc'.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Palabras clave obtenidas exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de palabras clave"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PalabraClave"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documento no encontrado"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/documentos/{id}/autores": {
+      "get": {
+        "tags": [
+          "Documentos"
+        ],
+        "summary": "Obtiene los autores de un documento específico",
+        "description": "Este endpoint devuelve una lista de autores asociados a un documento dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del documento del cual obtener los autores",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de los autores, puede ser 'asc' o 'desc'. Por defecto es 'asc'.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autores obtenidos exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de autores"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Autor"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documento no encontrado"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/colecciones": {
+      "get": {
+        "tags": [
+          "Colecciones"
+        ],
+        "summary": "Obtiene una lista de colecciones",
+        "description": "Este endpoint devuelve una lista paginada de todas las colecciones disponibles.",
+        "parameters": [
+          {
+            "name": "nombre_coleccion",
+            "in": "query",
+            "description": "Filtra las colecciones cuyo nombre coincida parcialmente con este valor.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de las colecciones, puede ser 'asc' o 'desc'. Por defecto es 'asc'.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página para la paginación. Por defecto es 1.",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Cantidad de resultados por página. Por defecto es 10.",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Colecciones obtenidas exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer",
+                  "description": "Página actual"
+                },
+                "total_pages": {
+                  "type": "integer",
+                  "description": "Número total de páginas"
+                },
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de colecciones"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Coleccion"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/colecciones/{id}": {
+      "get": {
+        "tags": [
+          "Colecciones"
+        ],
+        "summary": "Obtiene una colección específica",
+        "description": "Este endpoint devuelve la información detallada de una colección dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID de la colección a obtener",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Colección obtenida exitosamente",
+            "schema": {
+              "$ref": "#/definitions/Coleccion"
+            }
+          },
+          "404": {
+            "description": "Colección no encontrada"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/autores": {
+      "get": {
+        "tags": [
+          "Autores"
+        ],
+        "summary": "Obtiene una lista de autores",
+        "description": "Este endpoint devuelve una lista paginada de todos los autores disponibles.",
+        "parameters": [
+          {
+            "name": "nombre_autor",
+            "in": "query",
+            "description": "Filtra los autores cuyo nombre coincida parcialmente con este parámetro.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de los autores, puede ser 'asc' o 'desc'. Por defecto es 'asc'.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página para la paginación. Por defecto es 1.",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Cantidad de resultados por página. Por defecto es 10.",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autores obtenidos exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer",
+                  "description": "Página actual"
+                },
+                "total_pages": {
+                  "type": "integer",
+                  "description": "Número total de páginas"
+                },
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de autores"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Autor"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/autores/{id}": {
+      "get": {
+        "tags": [
+          "Autores"
+        ],
+        "summary": "Obtiene un autor específico",
+        "description": "Este endpoint devuelve la información detallada de un autor dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del autor a obtener",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autor obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/Autor"
+            }
+          },
+          "404": {
+            "description": "Autor no encontrado"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/palabras_clave": {
+      "get": {
+        "tags": [
+          "PalabrasClave"
+        ],
+        "summary": "Obtiene una lista de palabras clave",
+        "description": "Este endpoint devuelve una lista paginada de todas las palabras clave disponibles.",
+        "parameters": [
+          {
+            "name": "palabra_clave",
+            "in": "query",
+            "description": "Filtra las palabras clave cuyo valor coincida parcialmente con este parámetro.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Orden de las palabras clave, puede ser 'asc' o 'desc'. Por defecto es 'asc'.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página para la paginación. Por defecto es 1.",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Cantidad de resultados por página. Por defecto es 10.",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Palabras clave obtenidas exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer",
+                  "description": "Página actual"
+                },
+                "total_pages": {
+                  "type": "integer",
+                  "description": "Número total de páginas"
+                },
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de palabras clave"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PalabraClave"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/palabras_clave/{id}": {
+      "get": {
+        "tags": [
+          "PalabrasClave"
+        ],
+        "summary": "Obtiene una palabra clave específica",
+        "description": "Este endpoint devuelve la información detallada de una palabra clave dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID de la palabra clave a obtener",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Palabra clave obtenida exitosamente",
+            "schema": {
+              "$ref": "#/definitions/PalabraClave"
+            }
+          },
+          "404": {
+            "description": "Palabra clave no encontrada"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/editores": {
+      "get": {
+        "tags": [
+          "Editores"
+        ],
+        "summary": "Obtiene una lista de editores",
+        "description": "Este endpoint devuelve una lista de todos los editores disponibles.",
+        "responses": {
+          "200": {
+            "description": "Editores obtenidos exitosamente",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_items": {
+                  "type": "integer",
+                  "description": "Número total de editores"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Editor"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/editores/{id}": {
+      "get": {
+        "tags": [
+          "Editores"
+        ],
+        "summary": "Obtiene un editor específico",
+        "description": "Este endpoint devuelve la información detallada de un editor dado su ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID del editor a obtener",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Editor obtenido exitosamente",
+            "schema": {
+              "$ref": "#/definitions/Editor"
+            }
+          },
+          "404": {
+            "description": "Editor no encontrado"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Documento": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID del documento"
+        },
+        "titulo": {
+          "type": "string",
+          "description": "Título del documento"
+        },
+        "resumen": {
+          "type": "string",
+          "description": "Resumen del documento"
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI del documento"
+        },
+        "fecha": {
+          "type": "string",
+          "format": "date",
+          "description": "Fecha de creación del documento"
+        },
+        "url_pdf": {
+          "type": "string",
+          "description": "URL del archivo PDF del documento"
+        },
+        "id_coleccion": {
+          "type": "integer",
+          "description": "ID de la colección a la que pertenece el documento"
+        },
+        "id_editor": {
+          "type": "integer",
+          "description": "ID del editor que creó el documento"
+        }
+      }
+    },
+    "Coleccion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID de la colección"
+        },
+        "nombre_coleccion": {
+          "type": "string",
+          "description": "Nombre de la colección"
+        }
+      }
+    },
+    "Autor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID del autor"
+        },
+        "nombre_autor": {
+          "type": "string",
+          "description": "Nombre del autor"
+        }
+      }
+    },
+    "PalabraClave": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID de la palabra clave"
+        },
+        "palabra_clave": {
+          "type": "string",
+          "description": "Palabra clave asociada al documento"
+        }
+      }
+    },
+    "Editor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "ID del editor"
+        },
+        "nombre_editor": {
+          "type": "string",
+          "description": "Nombre del editor"
+        }
+      }
+    }
+  }
+}
