@@ -1,4 +1,5 @@
 import socket
+import json
 from flask import jsonify, request
 from app.api.models import Documento, Coleccion, Autor, Documento_Autor, PalabraClave, Documento_PalabraClave, Editor
 from app.api import bp
@@ -258,6 +259,30 @@ def get_editores():
 def get_editor(id):
     editor = Editor.query.get_or_404(id)
     return jsonify(editor.format())
+
+def consultar_indice_invertido(palabras):
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((INDICE_INVERTIDO_HOST, INDICE_INVERTIDO_PORT))
+        
+        client_socket.sendall(palabras.encode('utf-8'))
+
+        # Recibir la respuesta del servidor en fragmentos
+        response = ""
+        while True:
+            part = client_socket.recv(8192).decode("utf-8")
+            response += part
+            if len(part) < 8192:
+                break
+        response_data = json.loads(response)
+        
+        client_socket.close()
+
+        return response_data
+
+    except Exception as e:
+        return str(e)
+
 
 @bp.errorhandler(429)
 def ratelimit_error(e):
