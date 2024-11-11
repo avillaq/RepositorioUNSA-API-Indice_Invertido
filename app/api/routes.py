@@ -283,6 +283,26 @@ def consultar_indice_invertido(palabras):
     except Exception as e:
         return str(e)
 
+@bp.route('/buscar', methods=['GET'])
+@limiter.limit("10/minute")
+@cache.cached(query_string=True)
+def buscar_documentos():
+    palabras = request.args.get('palabras', '').strip()
+    if not palabras:
+        return jsonify(error="Debe proporcionar palabras clave para buscar"), 400
+
+    # Consultar al indice invertido
+    respuesta = consultar_indice_invertido(palabras)
+
+    try:
+        resultado = {
+            'total_items': respuesta["total"],
+            'items': respuesta["resultados"]
+        }
+        return jsonify(resultado)
+
+    except ValueError:
+        return jsonify(error="Error procesando la respuesta del índice invertido"), 500
 
 @bp.errorhandler(429)
 def ratelimit_error(e):
