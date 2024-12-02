@@ -6,10 +6,14 @@ from flask import jsonify, request
 from app.api.models import Documento, Coleccion, Autor, Documento_Autor, PalabraClave, Documento_PalabraClave, Editor
 from app.api import bp
 from app.extensions import db, limiter, cache
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuracion del servidor C++ de índice invertido
-INDICE_INVERTIDO_HOST = "localhost"
-INDICE_INVERTIDO_PORT = 8081
+INDICE_INVERTIDO_HOST = os.getenv('INDICE_INVERTIDO_HOST')
+INDICE_INVERTIDO_PORT = int(os.getenv('INDICE_INVERTIDO_PORT'))
 
 # Carga el modelo de spaCy
 nlp = spacy.load("es_core_news_sm")  # Modelo para español
