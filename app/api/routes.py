@@ -387,23 +387,22 @@ def consulta_lenguaje_natural():
     except ValueError:
         return jsonify(error="Error procesando la respuesta del índice invertido"), 500
 
-@bp.route('/api', methods=['GET'])
+@bp.route('/')
 def index_api():
-    return jsonify(message="Welcome to the API")
-
-@bp.route('/', methods=['GET'])
-def index():
-    return jsonify(message="Welcome to the API")
-
-# Prueba de variables de entorno
-@bp.route('/env', methods=['GET'])
-def get_env():
     return jsonify({
-        'SQLALCHEMY_DATABASE_URI': os.getenv('SQLALCHEMY_DATABASE_URI'),
-        'SECRET_KEY': os.getenv('SECRET_KEY'),
-        'INDICE_INVERTIDO_HOST': INDICE_INVERTIDO_HOST,
-        'INDICE_INVERTIDO_PORT': INDICE_INVERTIDO_PORT
-    })  # Devuelve las variables de entorno
+        "mensaje": "Bienvenido a la API del Repositorio UNSA",
+        "endpoints": {
+            "api": "/api",
+            "documentacion": "/api/docs",
+            "recursos": {
+                "documentos": "/api/documentos",
+                "autores": "/api/autores", 
+                "colecciones": "/api/colecciones",
+                "palabras_clave": "/api/palabras_clave",
+                "editores": "/api/editores"
+            }
+        }
+    })
 
 @bp.errorhandler(429)
 def ratelimit_error(e):
