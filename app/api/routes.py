@@ -396,6 +396,20 @@ def ratelimit_error(e):
 def not_found_error(e):
     return jsonify(error="Not found", message=str(e.description)), 404
 
-@bp.route('/')
+@bp.route('/api', methods=['GET'])
+def index_api():
+    return jsonify(message="Welcome to the API")
+
+@bp.route('/', methods=['GET'])
 def index():
     return jsonify(message="Welcome to the API")
+
+# Prueba de variables de entorno
+@bp.route('/env', methods=['GET'])
+def get_env():
+    return jsonify({
+        'SQLALCHEMY_DATABASE_URI': os.getenv('SQLALCHEMY_DATABASE_URI'),
+        'SECRET_KEY': os.getenv('SECRET_KEY'),
+        'INDICE_INVERTIDO_HOST': INDICE_INVERTIDO_HOST,
+        'INDICE_INVERTIDO_PORT': INDICE_INVERTIDO_PORT
+    })  # Devuelve las variables de entorno
