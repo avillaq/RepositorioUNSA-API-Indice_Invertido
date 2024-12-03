@@ -387,15 +387,6 @@ def consulta_lenguaje_natural():
     except ValueError:
         return jsonify(error="Error procesando la respuesta del índice invertido"), 500
 
-
-@bp.errorhandler(429)
-def ratelimit_error(e):
-    return jsonify(error="Rate limit exceeded", message=str(e.description)), 429
-
-@bp.errorhandler(404)
-def not_found_error(e):
-    return jsonify(error="Not found", message=str(e.description)), 404
-
 @bp.route('/api', methods=['GET'])
 def index_api():
     return jsonify(message="Welcome to the API")
@@ -413,3 +404,11 @@ def get_env():
         'INDICE_INVERTIDO_HOST': INDICE_INVERTIDO_HOST,
         'INDICE_INVERTIDO_PORT': INDICE_INVERTIDO_PORT
     })  # Devuelve las variables de entorno
+
+@bp.errorhandler(429)
+def ratelimit_error(e):
+    return jsonify(error="Rate limit exceeded", message=str(e.description)), 429
+
+@bp.errorhandler(404)
+def not_found_error(e):
+    return jsonify(error="Not found", message=str(e.description)), 404
