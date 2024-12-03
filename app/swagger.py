@@ -19,5 +19,9 @@ def serve_swagger_json():
     with open('app/static/swagger.json', 'r') as file:
         swagger_data = json.load(file)
         swagger_data['host'] = request.host
-        swagger_data['schemes'] = ['https' if request.is_secure else 'http']
+        # Actualizar schemes según el protocolo
+        if request.headers.get('X-Forwarded-Proto'):
+            swagger_data['schemes'] = [request.headers['X-Forwarded-Proto']]
+        else:
+            swagger_data['schemes'] = ['https' if request.is_secure else 'http']
         return jsonify(swagger_data)
