@@ -1,6 +1,6 @@
 from flask import Flask
 from app.extensions import db, limiter, cache
-from app.swagger import swaggerui_blueprint, SWAGGER_URL
+from app.swagger import swaggerui_blueprint, SWAGGER_URL, swagger_bp
 from flask_cors import CORS
 
 def create_app():
@@ -18,5 +18,6 @@ def create_app():
 
     # Registrar Swagger UI
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+    app.register_blueprint(swagger_bp)
 
     return app
